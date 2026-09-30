@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gramyuva.com/sitemap.xml
