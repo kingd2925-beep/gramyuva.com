@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-YBG0YpnCHKDsTa+dMyoczKFsRd1QGECTAwQieDx8Ljg=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-i+qgqeO5SpGRFQf7ZNV8hcQbIaeTiUptkZEhl6rwruM=' https://cdnjs.cloudflare.com; style-src 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>GramYuva AI — Think it. Build it. Right here.</title>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -496,9 +496,15 @@ footer{padding-block:28px 40px;border-top:1px solid var(--rule-gold);color:rgba(
   });
 
   /* ---------- gentle rise: text is complete at rest; only what sits below the first screen eases in ---------- */
-  var pending = [];
-  if(!reduce && !document.hidden){
-    pending = $$('.rise').filter(function(e){ return e.getBoundingClientRect().top > innerHeight; }).map(function(e){ e.classList.add('pre'); return {el:e, top:0}; });
+  // Nothing is dimmed until the reader actually scrolls, so a page that is never scrolled (a preview, a print,
+  // a full-page capture, a reader with scripts half-blocked) always shows every line at full strength.
+  var pending = [], armed = reduce;
+  function arm(){
+    armed = true;
+    var y = window.scrollY || document.documentElement.scrollTop || 0;
+    pending = $$('.rise').map(function(e){ return {el:e, top:e.getBoundingClientRect().top}; })
+      .filter(function(p){ return p.top > innerHeight; })
+      .map(function(p){ p.el.classList.add('pre'); return {el:p.el, top:p.top + y}; });
   }
   function reveal(y){
     if(!pending.length) return;
@@ -733,7 +739,7 @@ footer{padding-block:28px 40px;border-top:1px solid var(--rule-gold);color:rgba(
   }
   function update(){ var y = scrollTop(); reveal(y); readDepth(y); drawRoots(y); }
   var queued = false;
-  function onScroll(){ if(queued) return; queued = true; requestAnimationFrame(function(){ queued = false; update(); }); }
+  function onScroll(){ if(queued) return; queued = true; requestAnimationFrame(function(){ queued = false; if(!armed){ arm(); } update(); }); }
   function layout(){ buildExits(); sizeRoots(); genRoots(); measure(); update(); }
   var rt;
   function relayout(){
